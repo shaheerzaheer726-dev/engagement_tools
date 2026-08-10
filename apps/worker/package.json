@@ -1,0 +1,21 @@
+{
+  "name": "@engagement-tools/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "dev": "tsx watch src/index.ts",
+    "start": "node --enable-source-maps dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@engagement-tools/database": "workspace:*",
+    "pg-boss": "^12.27.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}

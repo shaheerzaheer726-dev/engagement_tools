@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+.pnpm-store/
+.next/
+.turbo/
+dist/
+coverage/
+
+# Generated database client
+packages/database/src/generated/
+
+# Environment and local state
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Editors
+.idea/
+.vscode/
+*.swp

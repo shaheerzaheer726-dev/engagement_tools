@@ -1,0 +1,7 @@
+.git
+.github
+**/.next
+**/dist
+**/node_modules
+.turbo
+*.log

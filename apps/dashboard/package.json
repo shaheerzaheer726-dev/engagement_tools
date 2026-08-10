@@ -1,0 +1,22 @@
+{
+  "name": "@engagement-tools/dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "clean": "rm -rf .next",
+    "dev": "next dev",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@engagement-tools/database": "workspace:*",
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}
