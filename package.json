@@ -19,6 +19,7 @@
     "db:generate": "pnpm --filter @engagement-tools/database generate",
     "db:migrate:deploy": "pnpm --filter @engagement-tools/database migrate:deploy",
     "db:migrate": "pnpm --filter @engagement-tools/database migrate:dev",
+    "db:seed": "pnpm --filter @engagement-tools/database seed",
     "db:studio": "pnpm --filter @engagement-tools/database studio"
   },
   "devDependencies": {
