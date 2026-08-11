@@ -43,6 +43,15 @@ To build and run the entire stack in containers:
 docker compose up --build
 ```
 
+After the containers are running, make sure the database is migrated and seeded so an initial administrator account exists:
+
+```bash
+pnpm db:migrate:deploy
+pnpm db:seed
+```
+
+The seed script will create the initial admin user. You can override the defaults with the `SEED_ADMIN_USERNAME` and `SEED_ADMIN_PASSWORD` environment variables when running the seed step.
+
 ## Common commands
 
 | Command           | Purpose                                             |

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import type { Prisma } from "@engagement-tools/database";
+import { Prisma } from "@engagement-tools/database";
 import { db } from "@engagement-tools/database";
 import { requireAdminApi } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
@@ -83,24 +83,37 @@ export async function POST(request: NextRequest) {
 
   const passwordHash = await hashPassword(password);
 
-  const user = await db.user.create({
-    data: {
-      username: username.trim(),
-      name: name.trim(),
-      passwordHash,
-      role: normalizedRole,
-      createdById: admin.id,
-    },
-    select: userSummarySelect,
-  });
+  try {
+    const user = await db.user.create({
+      data: {
+        username: username.trim(),
+        name: name.trim(),
+        passwordHash,
+        role: normalizedRole,
+        createdById: admin.id,
+      },
+      select: userSummarySelect,
+    });
 
-  await writeAuditLog({
-    actorId: admin.id,
-    action: "user.create",
-    entityType: "User",
-    entityId: user.id,
-    metadata: { username: user.username, role: user.role },
-  });
+    await writeAuditLog({
+      actorId: admin.id,
+      action: "user.create",
+      entityType: "User",
+      entityId: user.id,
+      metadata: { username: user.username, role: user.role },
+    });
 
-  return NextResponse.json({ user }, { status: 201 });
+    return NextResponse.json({ user }, { status: 201 });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error as any).code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "That username is already taken" },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 }

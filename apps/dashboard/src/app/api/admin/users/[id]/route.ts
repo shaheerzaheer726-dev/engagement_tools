@@ -83,19 +83,23 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const user = await db.user.update({
-      where: { id },
-      data,
-      select: userSummarySelect,
-    });
+    let user;
+
+    // If the password was changed, invalidate all sessions for the
+    // target user as part of the same transaction so old session tokens
+    // cannot be used after a password reset.
+    if (password !== undefined) {
+      const [updatedUser] = await db.$transaction([
+        db.user.update({ where: { id }, data, select: userSummarySelect }),
+        db.session.deleteMany({ where: { userId: id } }),
+      ]);
+      user = updatedUser;
+    } else {
+      user = await db.user.update({ where: { id }, data, select: userSummarySelect });
+    }
 
     for (const action of auditEvents) {
-      await writeAuditLog({
-        actorId: admin.id,
-        action,
-        entityType: "User",
-        entityId: user.id,
-      });
+      await writeAuditLog({ actorId: admin.id, action, entityType: "User", entityId: user.id });
     }
 
     return NextResponse.json({ user });
