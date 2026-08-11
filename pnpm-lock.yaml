@@ -42,6 +42,12 @@ importers:
       '@engagement-tools/database':
         specifier: workspace:*
         version: link:../../packages/database
+      bcryptjs:
+        specifier: ^3.0.2
+        version: 3.0.3
+      dotenv:
+        specifier: ^17.0.0
+        version: 17.4.2
       next:
         specifier: ^16.3.0
         version: 16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -64,6 +70,9 @@ importers:
       '@engagement-tools/database':
         specifier: workspace:*
         version: link:../../packages/database
+      dotenv:
+        specifier: ^17.0.0
+        version: 17.4.2
       pg-boss:
         specifier: ^12.27.0
         version: 12.27.0
@@ -83,6 +92,9 @@ importers:
       '@prisma/client':
         specifier: ^7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
+      bcryptjs:
+        specifier: ^3.0.2
+        version: 3.0.3
       dotenv:
         specifier: ^17.0.0
         version: 17.4.2
@@ -96,6 +108,9 @@ importers:
       prisma:
         specifier: ^7.9.1
         version: 7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.11
 
 packages:
 
@@ -1218,6 +1233,10 @@ packages:
   baseline-browser-mapping@2.11.13:
     resolution: {integrity: sha512-k9HNuUVMlqVjQ9UHzfPjIqiDbWw7WqT1AoT7GL8VwvF3r0ZfArtgiSPAlmupyNquNgOJHTuH4CKYf8ttMTWBTQ==}
     engines: {node: '>=6.0.0'}
+    hasBin: true
+
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
     hasBin: true
 
   better-result@2.10.0:
@@ -3748,6 +3767,8 @@ snapshots:
   balanced-match@4.0.4: {}
 
   baseline-browser-mapping@2.11.13: {}
+
+  bcryptjs@3.0.3: {}
 
   better-result@2.10.0: {}
 

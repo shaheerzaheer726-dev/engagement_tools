@@ -1,3 +1,4 @@
+import "./load-env.ts";
 import { createServer } from "node:http";
 import { PgBoss } from "pg-boss";
 import { env } from "./env.js";
