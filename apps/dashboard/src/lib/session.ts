@@ -79,6 +79,14 @@ export async function getSessionUser(): Promise<User | null> {
 }
 
 /**
+ * Helper to expose the configured session duration in milliseconds.
+ * Useful for route handlers that need to set cookie expiry consistently.
+ */
+export function getSessionDurationMs(): number {
+  return SESSION_DURATION_MS;
+}
+
+/**
  * Deletes the current session (if any) from the database and clears the cookie.
  */
 export async function destroySession(): Promise<void> {

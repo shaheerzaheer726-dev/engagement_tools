@@ -39,9 +39,10 @@ export async function POST(request: NextRequest) {
 
   const user = await db.user.findUnique({ where: { username } });
 
-  // Don't leak whether the username exists for the wrong role or inactive users.
+  // For any authentication failure, return the same generic error so an
+  // attacker cannot enumerate valid usernames or roles.
   if (!user || user.role !== role || user.status !== "ACTIVE") {
-    return NextResponse.json({ error: "No such user found" }, { status: 401 });
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   const isValid = await verifyPassword(password, user.passwordHash);

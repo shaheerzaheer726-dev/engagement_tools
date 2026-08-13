@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "../load-env.ts";
 import "./globals.css";
+import SessionRefresher from "./SessionRefresher";
 
 export const metadata: Metadata = {
   title: "Engagement Tools",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SessionRefresher />
+        {children}
+      </body>
     </html>
   );
 }
