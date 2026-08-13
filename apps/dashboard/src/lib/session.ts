@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { db, type User } from "@engagement-tools/database";
 
 export const SESSION_COOKIE_NAME = "session_token";
-const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const DEFAULT_SESSION_MINUTES = process.env.SESSION_DURATION_MINUTES
+  ? parseInt(process.env.SESSION_DURATION_MINUTES, 10)
+  : 60; // default: 60 minutes
+const SESSION_DURATION_MS = DEFAULT_SESSION_MINUTES * 60 * 1000;
 
 function newSessionToken(): string {
   return randomBytes(32).toString("hex");
@@ -51,6 +54,25 @@ export async function getSessionUser(): Promise<User | null> {
     // Expired: clean it up so it doesn't linger in the table.
     await db.session.delete({ where: { id: session.id } }).catch(() => {});
     return null;
+  }
+
+  // Sliding expiration: extend the session expiry on activity to limit
+  // the window in which an unattended long-lived cookie stays valid.
+  try {
+    const newExpires = new Date(Date.now() + SESSION_DURATION_MS);
+    await db.session
+      .update({ where: { id: session.id }, data: { expiresAt: newExpires } })
+      .catch(() => {});
+
+    cookieStore.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      expires: newExpires,
+    });
+  } catch {
+    // If updating the expiry fails, proceed with the existing session.user
   }
 
   return session.user;

@@ -24,7 +24,7 @@ export default async function UserPage() {
         <LogoutButton />
       </header>
 
-      <section className="admin-card">
+      <section className="card">
         <p>You are logged in. Welcome!</p>
       </section>
     </main>
