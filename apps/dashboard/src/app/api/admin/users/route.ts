@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
-      (error as any).code === "P2002"
+      error.code === "P2002"
     ) {
       return NextResponse.json(
         { error: "That username is already taken" },

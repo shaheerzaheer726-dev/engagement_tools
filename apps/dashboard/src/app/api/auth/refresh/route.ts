@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@engagement-tools/database";
 import { SESSION_COOKIE_NAME, getSessionDurationMs } from "@/lib/session";
 

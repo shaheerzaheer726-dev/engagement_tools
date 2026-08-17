@@ -12,7 +12,6 @@ function parseSessionMinutes(raw?: string | null): number {
     // Invalid configuration: fall back to documented default and warn.
     // Avoid throwing during import to keep the app resilient in development.
     // If you prefer fail-fast behavior, replace this with a thrown Error.
-    // eslint-disable-next-line no-console
     console.warn(
       `Invalid SESSION_DURATION_MINUTES value '${raw}' — using default ${DEFAULT_SESSION_MINUTES} minutes.`,
     );
