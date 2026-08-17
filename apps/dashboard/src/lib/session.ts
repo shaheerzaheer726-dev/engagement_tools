@@ -114,5 +114,5 @@ export async function destroySession(): Promise<void> {
     await db.session.deleteMany({ where: { token } });
   }
 
-  cookieStore.delete(SESSION_COOKIE_NAME, { path: "/" });
+  cookieStore.delete({ name: SESSION_COOKIE_NAME, path: "/" });
 }
