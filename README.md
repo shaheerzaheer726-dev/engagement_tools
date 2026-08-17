@@ -464,8 +464,10 @@ pg-boss manages its own schema.
 corepack enable
 pnpm install
 cp .env.example .env
+# Set SEED_ADMIN_USERNAME and a strong SEED_ADMIN_PASSWORD in .env
 docker compose up -d postgres
 pnpm db:migrate:deploy
+pnpm db:seed
 pnpm dev
 ```
 
@@ -479,14 +481,18 @@ To build and run the entire stack in containers:
 docker compose up --build
 ```
 
-After the containers are running, make sure the database is migrated and seeded so an initial administrator account exists:
+After the containers are running, create the initial administrator from a trusted environment with access to the database:
 
 ```bash
-pnpm db:migrate:deploy
+SEED_ADMIN_USERNAME=your-admin-username \
+SEED_ADMIN_PASSWORD='your-unique-strong-password' \
+SEED_ADMIN_NAME='Administrator' \
 pnpm db:seed
 ```
 
-The seed script will create the initial admin user. You can override the defaults with the `SEED_ADMIN_USERNAME` and `SEED_ADMIN_PASSWORD` environment variables when running the seed step.
+`SEED_ADMIN_USERNAME` and `SEED_ADMIN_PASSWORD` are required; there are no default credentials. The password must contain 12-72 UTF-8 bytes and must not match the username. The password is hashed before storage and is never printed by the seed command.
+
+The seed is idempotent when that username already belongs to an administrator. It fails rather than changing credentials or promoting an existing normal user. After signing in, the initial administrator can create additional administrators through the user-management interface. Run the seed command only as an explicit bootstrap or recovery operation, not on every application start.
 
 ## Common commands
 
@@ -500,6 +506,7 @@ The seed script will create the initial admin user. You can override the default
 | `pnpm db:generate`       | Generate the Prisma client                          |
 | `pnpm db:migrate`        | Create and apply a development migration            |
 | `pnpm db:migrate:deploy` | Apply checked-in migrations                         |
+| `pnpm db:seed`           | Create the explicitly configured bootstrap admin    |
 | `pnpm db:studio`         | Open Prisma Studio                                  |
 
 ## Architectural guardrails
