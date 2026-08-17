@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { username, password } = (body ?? {}) as {
+  const { username, password, role } = (body ?? {}) as {
     username?: unknown;
     password?: unknown;
+    role?: unknown;
   };
 
   if (
@@ -32,9 +33,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (typeof role !== "string" || (role !== "ADMIN" && role !== "USER")) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
   const user = await db.user.findUnique({ where: { username } });
 
-  if (!user || user.status !== "ACTIVE") {
+  // For any authentication failure, return the same generic error so an
+  // attacker cannot enumerate valid usernames or roles.
+  if (!user || user.role !== role || user.status !== "ACTIVE") {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 

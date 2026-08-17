@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-export function LoginForm() {
+export function UserLoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +19,7 @@ export function LoginForm() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, role: "ADMIN" }),
+        body: JSON.stringify({ username, password, role: "USER" }),
       });
 
       const data = await response.json();
@@ -28,8 +28,14 @@ export function LoginForm() {
         setError(data.error ?? "Unable to sign in");
         return;
       }
-
-      router.push("/admin");
+      // Route based on returned role so admins who use the user form
+      // are forwarded to the admin dashboard.
+      const role = data?.user?.role;
+      if (role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/user");
+      }
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");

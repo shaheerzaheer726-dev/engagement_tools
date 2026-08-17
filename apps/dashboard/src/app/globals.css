@@ -61,19 +61,46 @@ p {
 }
 
 .auth-card {
-  width: min(100%, 26rem);
-  background: rgba(16, 24, 41, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  padding: 2.25rem;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(18px);
+  width: min(100%, 30rem);
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(22px);
 }
 
 .auth-card h1 {
   font-size: 2rem;
-  margin: 0.5rem 0 0.5rem;
+  margin: 0.5rem 0 0.75rem;
   letter-spacing: -0.02em;
+}
+
+.home-selector-card {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.button-group {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 520px) {
+  .button-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .auth-subtitle {

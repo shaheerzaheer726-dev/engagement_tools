@@ -3,7 +3,28 @@ import { cookies } from "next/headers";
 import { db, type User } from "@engagement-tools/database";
 
 export const SESSION_COOKIE_NAME = "session_token";
-const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const DEFAULT_SESSION_MINUTES = 60; // default: 60 minutes
+
+function parseSessionMinutes(raw?: string | null): number {
+  if (!raw) return DEFAULT_SESSION_MINUTES;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    // Invalid configuration: fall back to documented default and warn.
+    // Avoid throwing during import to keep the app resilient in development.
+    // If you prefer fail-fast behavior, replace this with a thrown Error.
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Invalid SESSION_DURATION_MINUTES value '${raw}' — using default ${DEFAULT_SESSION_MINUTES} minutes.`
+    );
+    return DEFAULT_SESSION_MINUTES;
+  }
+  return parsed;
+}
+
+const DEFAULT_SESSION_MINUTES_PARSED = parseSessionMinutes(
+  process.env.SESSION_DURATION_MINUTES ?? null
+);
+const SESSION_DURATION_MS = DEFAULT_SESSION_MINUTES_PARSED * 60 * 1000;
 
 function newSessionToken(): string {
   return randomBytes(32).toString("hex");
@@ -53,7 +74,34 @@ export async function getSessionUser(): Promise<User | null> {
     return null;
   }
 
+  // Sliding expiration: extend the session expiry on activity to limit
+  // the window in which an unattended long-lived cookie stays valid.
+  try {
+    const newExpires = new Date(Date.now() + SESSION_DURATION_MS);
+    await db.session
+      .update({ where: { id: session.id }, data: { expiresAt: newExpires } })
+      .catch(() => {});
+
+    cookieStore.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      expires: newExpires,
+    });
+  } catch {
+    // If updating the expiry fails, proceed with the existing session.user
+  }
+
   return session.user;
+}
+
+/**
+ * Helper to expose the configured session duration in milliseconds.
+ * Useful for route handlers that need to set cookie expiry consistently.
+ */
+export function getSessionDurationMs(): number {
+  return SESSION_DURATION_MS;
 }
 
 /**
