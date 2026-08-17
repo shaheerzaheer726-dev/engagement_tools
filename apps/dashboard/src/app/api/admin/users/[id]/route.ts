@@ -95,11 +95,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       ]);
       user = updatedUser;
     } else {
-      user = await db.user.update({ where: { id }, data, select: userSummarySelect });
+      user = await db.user.update({
+        where: { id },
+        data,
+        select: userSummarySelect,
+      });
     }
 
     for (const action of auditEvents) {
-      await writeAuditLog({ actorId: admin.id, action, entityType: "User", entityId: user.id });
+      await writeAuditLog({
+        actorId: admin.id,
+        action,
+        entityType: "User",
+        entityId: user.id,
+      });
     }
 
     return NextResponse.json({ user });

@@ -14,7 +14,7 @@ function parseSessionMinutes(raw?: string | null): number {
     // If you prefer fail-fast behavior, replace this with a thrown Error.
     // eslint-disable-next-line no-console
     console.warn(
-      `Invalid SESSION_DURATION_MINUTES value '${raw}' — using default ${DEFAULT_SESSION_MINUTES} minutes.`
+      `Invalid SESSION_DURATION_MINUTES value '${raw}' — using default ${DEFAULT_SESSION_MINUTES} minutes.`,
     );
     return DEFAULT_SESSION_MINUTES;
   }
@@ -22,7 +22,7 @@ function parseSessionMinutes(raw?: string | null): number {
 }
 
 const DEFAULT_SESSION_MINUTES_PARSED = parseSessionMinutes(
-  process.env.SESSION_DURATION_MINUTES ?? null
+  process.env.SESSION_DURATION_MINUTES ?? null,
 );
 const SESSION_DURATION_MS = DEFAULT_SESSION_MINUTES_PARSED * 60 * 1000;
 

@@ -20,7 +20,9 @@ export default async function UserLoginPage() {
       <section className="auth-card">
         <p className="eyebrow">Engagement Tools</p>
         <h1>User sign in</h1>
-        <p className="auth-subtitle">Login with credentials created by an admin.</p>
+        <p className="auth-subtitle">
+          Login with credentials created by an admin.
+        </p>
         <UserLoginForm />
       </section>
     </main>

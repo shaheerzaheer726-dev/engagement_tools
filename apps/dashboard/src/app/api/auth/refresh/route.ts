@@ -6,8 +6,12 @@ export async function POST(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ ok: false }, { status: 401 });
 
-  const session = await db.session.findUnique({ where: { token }, include: { user: true } });
-  if (!session || !session.user) return NextResponse.json({ ok: false }, { status: 401 });
+  const session = await db.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+  if (!session || !session.user)
+    return NextResponse.json({ ok: false }, { status: 401 });
 
   // If the session is already expired, signal unauthenticated.
   if (session.expiresAt.getTime() < Date.now()) {
