@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
+import { LogoutButton } from "@/components/LogoutButton";
 import { getSessionUser } from "@/lib/session";
-import { LogoutButton } from "../admin/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,11 @@ export default async function UserPage() {
   const user = await getSessionUser();
 
   if (!user || user.status !== "ACTIVE") {
-    redirect("/user/login");
+    redirect("/login");
+  }
+
+  if (user.role === "ADMIN") {
+    redirect("/admin");
   }
 
   return (
