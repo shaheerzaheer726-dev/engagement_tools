@@ -1,4 +1,4 @@
-import { db, type Prisma } from "@engagement-tools/database";
+import { getDb, type Prisma } from "@engagement-tools/database";
 
 export async function writeAuditLog(params: {
   actorId: string;
@@ -8,6 +8,7 @@ export async function writeAuditLog(params: {
   metadata?: Prisma.InputJsonObject;
 }): Promise<void> {
   try {
+    const db = getDb();
     await db.auditLog.create({
       data: {
         actorId: params.actorId,

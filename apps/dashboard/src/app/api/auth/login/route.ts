@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { db } from "@engagement-tools/database";
+import { getDb } from "@engagement-tools/database";
 import { verifyPassword } from "@/lib/password";
 import { createSession } from "@/lib/session";
 
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
+  const db = getDb();
   const user = await db.user.findUnique({ where: { username } });
 
   // For any authentication failure, return the same generic error so an

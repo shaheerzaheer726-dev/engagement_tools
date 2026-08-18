@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { Prisma, db } from "@engagement-tools/database";
+import { getDb, Prisma } from "@engagement-tools/database";
 import { requireAdminApi } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 import { writeAuditLog } from "@/lib/audit";
@@ -82,6 +82,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "No changes provided" }, { status: 400 });
   }
 
+  const db = getDb();
   try {
     let user;
 
@@ -138,6 +139,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  const db = getDb();
   try {
     const deleted = await db.user.delete({
       where: { id },

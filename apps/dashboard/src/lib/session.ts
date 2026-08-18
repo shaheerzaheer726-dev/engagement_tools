@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import { db, type User } from "@engagement-tools/database";
+import { getDb, type User } from "@engagement-tools/database";
 
 export const SESSION_COOKIE_NAME = "session_token";
 const DEFAULT_SESSION_MINUTES = 60; // default: 60 minutes
@@ -34,6 +34,7 @@ function newSessionToken(): string {
  * and sets the httpOnly session cookie on the response.
  */
 export async function createSession(userId: string): Promise<void> {
+  const db = getDb();
   const token = newSessionToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
@@ -60,6 +61,7 @@ export async function getSessionUser(): Promise<User | null> {
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
+  const db = getDb();
   const session = await db.session.findUnique({
     where: { token },
     include: { user: true },
@@ -111,6 +113,7 @@ export async function destroySession(): Promise<void> {
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (token) {
+    const db = getDb();
     await db.session.deleteMany({ where: { token } });
   }
 
