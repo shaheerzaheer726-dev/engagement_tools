@@ -229,7 +229,9 @@ function UserRow({
 
   async function handleDelete() {
     if (
-      !window.confirm(`Delete user "${localUser.username}"? This cannot be undone.`)
+      !window.confirm(
+        `Delete user "${localUser.username}"? This cannot be undone.`,
+      )
     ) {
       return;
     }
@@ -301,7 +303,10 @@ function UserRow({
       {isPasswordFormOpen && (
         <tr>
           <td colSpan={7}>
-            <ChangePasswordForm userId={localUser.id} onDone={onPasswordChanged} />
+            <ChangePasswordForm
+              userId={localUser.id}
+              onDone={onPasswordChanged}
+            />
           </td>
         </tr>
       )}
