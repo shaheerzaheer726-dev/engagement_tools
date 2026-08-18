@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { LogoutButton } from "@/app/admin/LogoutButton";
+import { LogoutButton } from "@/components/LogoutButton";
 import { getSessionUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";

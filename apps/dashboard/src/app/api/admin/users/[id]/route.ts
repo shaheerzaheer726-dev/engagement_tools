@@ -86,10 +86,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     let user;
 
-    // If the password was changed, invalidate all sessions for the
-    // target user as part of the same transaction so old session tokens
-    // cannot be used after a password reset.
-    if (password !== undefined) {
+    // Invalidate all sessions for the target user as part of the same
+    // transaction when password is changed or user is disabled, so old
+    // session tokens cannot be used after a password reset or when
+    // the account is disabled.
+    if (password !== undefined || status === "DISABLED") {
       const [updatedUser] = await db.$transaction([
         db.user.update({ where: { id }, data, select: userSummarySelect }),
         db.session.deleteMany({ where: { userId: id } }),
