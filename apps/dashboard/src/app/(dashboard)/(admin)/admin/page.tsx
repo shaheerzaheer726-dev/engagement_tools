@@ -1,6 +1,6 @@
 import { getDb } from "@engagement-tools/database";
 import { LogoutButton } from "@/components/LogoutButton";
-import { UserManager } from "@/app/admin/UserManager";
+import { UserManager } from "@/app/(dashboard)/(admin)/admin/_components/UserManager";
 import { requireAdminPage } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
