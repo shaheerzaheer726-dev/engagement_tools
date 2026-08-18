@@ -1,7 +1,7 @@
 import { getDb } from "@engagement-tools/database";
+import { LogoutButton } from "@/app/admin/LogoutButton";
+import { UserManager } from "@/app/admin/UserManager";
 import { requireAdminPage } from "@/lib/auth";
-import { UserManager } from "./UserManager";
-import { LogoutButton } from "./LogoutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +38,10 @@ export default async function AdminPage() {
 
       <UserManager
         currentAdminId={admin.id}
-        initialUsers={users.map((u) => ({
-          ...u,
-          createdAt: u.createdAt.toISOString(),
-          updatedAt: u.updatedAt.toISOString(),
+        initialUsers={users.map((user) => ({
+          ...user,
+          createdAt: user.createdAt.toISOString(),
+          updatedAt: user.updatedAt.toISOString(),
         }))}
       />
     </main>
