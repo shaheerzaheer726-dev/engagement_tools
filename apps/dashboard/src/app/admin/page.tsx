@@ -1,4 +1,4 @@
-import { db } from "@engagement-tools/database";
+import { getDb } from "@engagement-tools/database";
 import { requireAdminPage } from "@/lib/auth";
 import { UserManager } from "./UserManager";
 import { LogoutButton } from "./LogoutButton";
@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const admin = await requireAdminPage();
+  const db = getDb();
 
   const users = await db.user.findMany({
     select: {

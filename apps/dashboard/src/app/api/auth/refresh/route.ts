@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@engagement-tools/database";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { getDb } from "@engagement-tools/database";
 import { SESSION_COOKIE_NAME, getSessionDurationMs } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ ok: false }, { status: 401 });
 
-  const session = await db.session.findUnique({ where: { token }, include: { user: true } });
-  if (!session || !session.user) return NextResponse.json({ ok: false }, { status: 401 });
+  const db = getDb();
+  const session = await db.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+  if (!session || !session.user)
+    return NextResponse.json({ ok: false }, { status: 401 });
 
   // If the session is already expired, signal unauthenticated.
   if (session.expiresAt.getTime() < Date.now()) {

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { Prisma } from "@engagement-tools/database";
-import { db } from "@engagement-tools/database";
+import { getDb } from "@engagement-tools/database";
 import { requireAdminApi } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 import { writeAuditLog } from "@/lib/audit";
@@ -23,6 +23,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const db = getDb();
   const users = await db.user.findMany({
     select: userSummarySelect,
     orderBy: { createdAt: "desc" },
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
   }
   const normalizedRole = role === "ADMIN" ? "ADMIN" : "USER";
 
+  const db = getDb();
   const existing = await db.user.findUnique({
     where: { username: username.trim() },
   });
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
-      (error as any).code === "P2002"
+      error.code === "P2002"
     ) {
       return NextResponse.json(
         { error: "That username is already taken" },
