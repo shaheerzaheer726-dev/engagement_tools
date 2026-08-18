@@ -192,18 +192,51 @@ function UserRow({
   onPasswordChanged: () => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [rowError, setRowError] = useState<string | null>(null);
+  const [localUser, setLocalUser] = useState<AdminUserRow>(user);
+
+  async function handleToggleStatus() {
+    const newStatus = localUser.status === "ACTIVE" ? "DISABLED" : "ACTIVE";
+    const action = newStatus === "DISABLED" ? "disable" : "enable";
+    if (
+      !window.confirm(
+        `${newStatus === "DISABLED" ? "Disable" : "Enable"} user "${localUser.username}"?`,
+      )
+    ) {
+      return;
+    }
+    setIsTogglingStatus(true);
+    setRowError(null);
+    try {
+      const response = await fetch(`/api/admin/users/${localUser.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setRowError(data.error ?? `Unable to ${action} user`);
+        return;
+      }
+      setLocalUser(data.user as AdminUserRow);
+    } catch {
+      setRowError("Something went wrong. Please try again.");
+    } finally {
+      setIsTogglingStatus(false);
+    }
+  }
 
   async function handleDelete() {
     if (
-      !window.confirm(`Delete user "${user.username}"? This cannot be undone.`)
+      !window.confirm(`Delete user "${localUser.username}"? This cannot be undone.`)
     ) {
       return;
     }
     setIsDeleting(true);
     setRowError(null);
     try {
-      const response = await fetch(`/api/admin/users/${user.id}`, {
+      const response = await fetch(`/api/admin/users/${localUser.id}`, {
         method: "DELETE",
       });
       const data = await response.json();
@@ -222,16 +255,16 @@ function UserRow({
   return (
     <>
       <tr>
-        <td>{user.username}</td>
-        <td>{user.name}</td>
-        <td>{user.role}</td>
+        <td>{localUser.username}</td>
+        <td>{localUser.name}</td>
+        <td>{localUser.role}</td>
         <td>
-          <span className={`badge badge-${user.status.toLowerCase()}`}>
-            {user.status}
+          <span className={`badge badge-${localUser.status.toLowerCase()}`}>
+            {localUser.status}
           </span>
         </td>
-        <td>{user.createdBy ? user.createdBy.username : "—"}</td>
-        <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+        <td>{localUser.createdBy ? localUser.createdBy.username : "—"}</td>
+        <td>{new Date(localUser.createdAt).toLocaleDateString()}</td>
         <td className="actions">
           <button
             type="button"
@@ -239,6 +272,20 @@ function UserRow({
             onClick={onTogglePasswordForm}
           >
             {isPasswordFormOpen ? "Cancel" : "Change password"}
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${
+              localUser.status === "ACTIVE" ? "btn-danger" : "btn-success"
+            }`}
+            onClick={handleToggleStatus}
+            disabled={isTogglingStatus}
+          >
+            {isTogglingStatus
+              ? "Updating..."
+              : localUser.status === "ACTIVE"
+                ? "Disable"
+                : "Enable"}
           </button>
           <button
             type="button"
@@ -254,14 +301,14 @@ function UserRow({
       {isPasswordFormOpen && (
         <tr>
           <td colSpan={7}>
-            <ChangePasswordForm userId={user.id} onDone={onPasswordChanged} />
+            <ChangePasswordForm userId={localUser.id} onDone={onPasswordChanged} />
           </td>
         </tr>
       )}
       {rowError && (
         <tr>
-          <td colSpan={7} className="form-error">
-            {rowError}
+          <td colSpan={7}>
+            <p className="form-error">{rowError}</p>
           </td>
         </tr>
       )}
