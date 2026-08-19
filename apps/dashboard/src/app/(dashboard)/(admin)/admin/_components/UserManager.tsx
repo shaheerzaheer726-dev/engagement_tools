@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 type UserRole = "ADMIN" | "USER";
 type UserStatus = "ACTIVE" | "DISABLED";
+type RowPanel = "edit" | "password";
 
 export type AdminUserRow = {
   id: string;
@@ -19,58 +20,96 @@ export type AdminUserRow = {
 export function UserManager({
   initialUsers,
   currentAdminId,
+  initialShowCreate = false,
 }: {
   initialUsers: AdminUserRow[];
   currentAdminId: string;
+  initialShowCreate?: boolean;
 }) {
   const [users, setUsers] = useState<AdminUserRow[]>(initialUsers);
-  const [openPasswordRowId, setOpenPasswordRowId] = useState<string | null>(
-    null,
-  );
+  const [showCreate, setShowCreate] = useState(initialShowCreate);
+  const [openRow, setOpenRow] = useState<{
+    id: string;
+    panel: RowPanel;
+  } | null>(null);
+
+  function toggleRowPanel(id: string, panel: RowPanel) {
+    setOpenRow((current) =>
+      current?.id === id && current.panel === panel ? null : { id, panel },
+    );
+  }
 
   return (
-    <div className="admin-body">
-      <CreateUserForm
-        onCreated={(user) => setUsers((prev) => [user, ...prev])}
-      />
+    <div className="users-manager">
+      <div className="users-toolbar">
+        <div>
+          <h2>All users</h2>
+          <p>
+            {users.length} {users.length === 1 ? "account" : "accounts"} in this
+            workspace
+          </p>
+        </div>
+        <button
+          type="button"
+          className="users-add-button"
+          onClick={() => setShowCreate((current) => !current)}
+          aria-expanded={showCreate}
+          aria-controls="create-user-panel"
+        >
+          <span aria-hidden="true">+</span>
+          {showCreate ? "Close" : "Add user"}
+        </button>
+      </div>
 
-      <section className="card">
-        <h2>Users ({users.length})</h2>
+      {showCreate && (
+        <CreateUserForm
+          onCancel={() => setShowCreate(false)}
+          onCreated={(user) => {
+            setUsers((current) => [user, ...current]);
+            setShowCreate(false);
+          }}
+        />
+      )}
+
+      <section className="users-list-card" aria-label="Workspace users">
         {users.length === 0 ? (
-          <p className="muted">No users yet. Create the first one above.</p>
+          <div className="users-empty-state">
+            <span aria-hidden="true">••</span>
+            <h3>No users yet</h3>
+            <p>Add the first account to this workspace.</p>
+          </div>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Created by</th>
-                <th>Created</th>
-                <th aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <UserRow
-                  key={user.id}
-                  user={user}
-                  isSelf={user.id === currentAdminId}
-                  isPasswordFormOpen={openPasswordRowId === user.id}
-                  onTogglePasswordForm={() =>
-                    setOpenPasswordRowId((prev) =>
-                      prev === user.id ? null : user.id,
-                    )
-                  }
-                  onDeleted={() =>
-                    setUsers((prev) => prev.filter((u) => u.id !== user.id))
-                  }
-                  onPasswordChanged={() => setOpenPasswordRowId(null)}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="users-table-scroll">
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th className="users-actions-heading">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <UserRow
+                    key={user.id}
+                    user={user}
+                    isSelf={user.id === currentAdminId}
+                    openPanel={openRow?.id === user.id ? openRow.panel : null}
+                    onTogglePanel={(panel) => toggleRowPanel(user.id, panel)}
+                    onClosePanel={() => setOpenRow(null)}
+                    onDeleted={() => {
+                      setUsers((current) =>
+                        current.filter((item) => item.id !== user.id),
+                      );
+                      setOpenRow(null);
+                    }}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>
@@ -79,8 +118,10 @@ export function UserManager({
 
 function CreateUserForm({
   onCreated,
+  onCancel,
 }: {
   onCreated: (user: AdminUserRow) => void;
+  onCancel: () => void;
 }) {
   const [username, setUsername] = useState("");
   const [name, setName] = useState("");
@@ -108,10 +149,6 @@ function CreateUserForm({
       }
 
       onCreated(data.user as AdminUserRow);
-      setUsername("");
-      setName("");
-      setPassword("");
-      setRole("USER");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -120,58 +157,91 @@ function CreateUserForm({
   }
 
   return (
-    <section className="card">
-      <h2>Create a user</h2>
-      <p className="muted">
-        Set their initial username and password now and hand them off manually.
-        There is no self-service sign-up or password reset yet.
-      </p>
-      <form className="form form-row" onSubmit={handleSubmit}>
-        <label className="field">
-          <span>Username</span>
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </label>
-        <label className="field">
+    <section className="users-form-card" id="create-user-panel">
+      <div className="users-form-heading">
+        <div>
+          <h3>Add a new user</h3>
+          <p>Create their account and assign initial access.</p>
+        </div>
+        <button
+          type="button"
+          className="users-close-button"
+          onClick={onCancel}
+          aria-label="Close add user form"
+        >
+          ×
+        </button>
+      </div>
+
+      <form className="users-form" onSubmit={handleSubmit}>
+        <label className="users-field">
           <span>Full name</span>
           <input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="e.g. Ayesha Khan"
+            autoComplete="name"
             required
           />
         </label>
-        <label className="field">
-          <span>Password</span>
+        <label className="users-field">
+          <span>Username</span>
+          <input
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="e.g. ayesha"
+            autoComplete="off"
+            autoCapitalize="none"
+            minLength={3}
+            required
+          />
+        </label>
+        <label className="users-field">
+          <span>Temporary password</span>
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="At least 6 characters"
+            autoComplete="new-password"
             minLength={6}
+            required
           />
         </label>
-        <label className="field">
+        <label className="users-field">
           <span>Role</span>
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
+            onChange={(event) => setRole(event.target.value as UserRole)}
           >
             <option value="USER">User</option>
-            <option value="ADMIN">Admin</option>
+            <option value="ADMIN">Administrator</option>
           </select>
         </label>
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Creating..." : "Create user"}
-        </button>
+
+        {error && (
+          <p className="users-form-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="users-form-actions">
+          <button
+            type="button"
+            className="users-secondary-button"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="users-primary-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Adding user…" : "Add user"}
+          </button>
+        </div>
       </form>
-      {error && <p className="form-error">{error}</p>}
     </section>
   );
 }
@@ -179,33 +249,35 @@ function CreateUserForm({
 function UserRow({
   user,
   isSelf,
-  isPasswordFormOpen,
-  onTogglePasswordForm,
+  openPanel,
+  onTogglePanel,
+  onClosePanel,
   onDeleted,
-  onPasswordChanged,
 }: {
   user: AdminUserRow;
   isSelf: boolean;
-  isPasswordFormOpen: boolean;
-  onTogglePasswordForm: () => void;
+  openPanel: RowPanel | null;
+  onTogglePanel: (panel: RowPanel) => void;
+  onClosePanel: () => void;
   onDeleted: () => void;
-  onPasswordChanged: () => void;
 }) {
+  const [localUser, setLocalUser] = useState(user);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [rowError, setRowError] = useState<string | null>(null);
-  const [localUser, setLocalUser] = useState<AdminUserRow>(user);
 
   async function handleToggleStatus() {
     const newStatus = localUser.status === "ACTIVE" ? "DISABLED" : "ACTIVE";
     const action = newStatus === "DISABLED" ? "disable" : "enable";
+
     if (
       !window.confirm(
-        `${newStatus === "DISABLED" ? "Disable" : "Enable"} user "${localUser.username}"?`,
+        `${action === "disable" ? "Disable" : "Enable"} ${localUser.name}?`,
       )
     ) {
       return;
     }
+
     setIsTogglingStatus(true);
     setRowError(null);
     try {
@@ -215,10 +287,12 @@ function UserRow({
         body: JSON.stringify({ status: newStatus }),
       });
       const data = await response.json();
+
       if (!response.ok) {
         setRowError(data.error ?? `Unable to ${action} user`);
         return;
       }
+
       setLocalUser(data.user as AdminUserRow);
     } catch {
       setRowError("Something went wrong. Please try again.");
@@ -228,13 +302,10 @@ function UserRow({
   }
 
   async function handleDelete() {
-    if (
-      !window.confirm(
-        `Delete user "${localUser.username}"? This cannot be undone.`,
-      )
-    ) {
+    if (!window.confirm(`Delete ${localUser.name}? This cannot be undone.`)) {
       return;
     }
+
     setIsDeleting(true);
     setRowError(null);
     try {
@@ -242,10 +313,12 @@ function UserRow({
         method: "DELETE",
       });
       const data = await response.json();
+
       if (!response.ok) {
         setRowError(data.error ?? "Unable to delete user");
         return;
       }
+
       onDeleted();
     } catch {
       setRowError("Something went wrong. Please try again.");
@@ -257,63 +330,110 @@ function UserRow({
   return (
     <>
       <tr>
-        <td>{localUser.username}</td>
-        <td>{localUser.name}</td>
-        <td>{localUser.role}</td>
         <td>
-          <span className={`badge badge-${localUser.status.toLowerCase()}`}>
-            {localUser.status}
+          <div className="users-person">
+            <span className="users-person-avatar" aria-hidden="true">
+              {localUser.name.trim().charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <div className="users-person-name">
+                {localUser.name}
+                {isSelf && <span>You</span>}
+              </div>
+              <small>@{localUser.username}</small>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span className="users-role">{formatRole(localUser.role)}</span>
+        </td>
+        <td>
+          <span
+            className={`users-status users-status-${localUser.status.toLowerCase()}`}
+          >
+            <span aria-hidden="true" />
+            {formatStatus(localUser.status)}
           </span>
         </td>
-        <td>{localUser.createdBy ? localUser.createdBy.username : "—"}</td>
-        <td>{new Date(localUser.createdAt).toLocaleDateString()}</td>
-        <td className="actions">
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={onTogglePasswordForm}
+        <td className="users-created">
+          {new Date(localUser.createdAt).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </td>
+        <td>
+          <div
+            className="users-row-actions"
+            aria-label={`Actions for ${localUser.name}`}
           >
-            {isPasswordFormOpen ? "Cancel" : "Change password"}
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${
-              localUser.status === "ACTIVE" ? "btn-danger" : "btn-success"
-            }`}
-            onClick={handleToggleStatus}
-            disabled={isTogglingStatus}
-          >
-            {isTogglingStatus
-              ? "Updating..."
-              : localUser.status === "ACTIVE"
-                ? "Disable"
-                : "Enable"}
-          </button>
-          <button
-            type="button"
-            className="btn btn-danger btn-sm"
-            onClick={handleDelete}
-            disabled={isDeleting || isSelf}
-            title={isSelf ? "You cannot delete your own account" : undefined}
-          >
-            {isDeleting ? "Deleting..." : "Delete"}
-          </button>
+            <button
+              type="button"
+              className="users-action-button"
+              onClick={() => onTogglePanel("edit")}
+            >
+              {openPanel === "edit" ? "Cancel" : "Edit"}
+            </button>
+            <button
+              type="button"
+              className="users-action-button"
+              onClick={() => onTogglePanel("password")}
+            >
+              {openPanel === "password" ? "Cancel" : "Password"}
+            </button>
+            <button
+              type="button"
+              className="users-action-button"
+              onClick={handleToggleStatus}
+              disabled={isTogglingStatus || isSelf}
+              title={isSelf ? "You cannot disable your own account" : undefined}
+            >
+              {isTogglingStatus
+                ? "Updating…"
+                : localUser.status === "ACTIVE"
+                  ? "Disable"
+                  : "Enable"}
+            </button>
+            <button
+              type="button"
+              className="users-action-button users-action-danger"
+              onClick={handleDelete}
+              disabled={isDeleting || isSelf}
+              title={isSelf ? "You cannot delete your own account" : undefined}
+            >
+              {isDeleting ? "Deleting…" : "Delete"}
+            </button>
+          </div>
         </td>
       </tr>
-      {isPasswordFormOpen && (
-        <tr>
-          <td colSpan={7}>
-            <ChangePasswordForm
-              userId={localUser.id}
-              onDone={onPasswordChanged}
-            />
+
+      {openPanel && (
+        <tr className="users-detail-row">
+          <td colSpan={5}>
+            {openPanel === "edit" ? (
+              <EditUserForm
+                user={localUser}
+                onCancel={onClosePanel}
+                onUpdated={(updatedUser) => {
+                  setLocalUser(updatedUser);
+                  onClosePanel();
+                }}
+              />
+            ) : (
+              <ChangePasswordForm
+                userId={localUser.id}
+                onCancel={onClosePanel}
+                onDone={onClosePanel}
+              />
+            )}
           </td>
         </tr>
       )}
+
       {rowError && (
-        <tr>
-          <td colSpan={7}>
-            <p className="form-error">{rowError}</p>
+        <tr className="users-error-row">
+          <td colSpan={5}>
+            <p role="alert">{rowError}</p>
           </td>
         </tr>
       )}
@@ -321,35 +441,38 @@ function UserRow({
   );
 }
 
-function ChangePasswordForm({
-  userId,
-  onDone,
+function EditUserForm({
+  user,
+  onUpdated,
+  onCancel,
 }: {
-  userId: string;
-  onDone: () => void;
+  user: AdminUserRow;
+  onUpdated: (user: AdminUserRow) => void;
+  onCancel: () => void;
 }) {
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState(user.name);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ name }),
       });
       const data = await response.json();
+
       if (!response.ok) {
-        setError(data.error ?? "Unable to change password");
+        setError(data.error ?? "Unable to update user");
         return;
       }
-      setSuccess(true);
-      setTimeout(onDone, 800);
+
+      onUpdated(data.user as AdminUserRow);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -358,27 +481,124 @@ function ChangePasswordForm({
   }
 
   return (
-    <form className="form form-row inline-form" onSubmit={handleSubmit}>
-      <label className="field">
+    <form className="users-inline-form" onSubmit={handleSubmit}>
+      <div className="users-inline-copy">
+        <strong>Edit user</strong>
+        <span>The username and role remain unchanged.</span>
+      </div>
+      <label className="users-field">
+        <span>Full name</span>
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+          autoFocus
+        />
+      </label>
+      <div className="users-inline-actions">
+        <button
+          type="button"
+          className="users-secondary-button"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="users-primary-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+      {error && <p className="users-form-error">{error}</p>}
+    </form>
+  );
+}
+
+function ChangePasswordForm({
+  userId,
+  onDone,
+  onCancel,
+}: {
+  userId: string;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error ?? "Unable to update password");
+        return;
+      }
+
+      onDone();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form className="users-inline-form" onSubmit={handleSubmit}>
+      <div className="users-inline-copy">
+        <strong>Update password</strong>
+        <span>This will sign the user out of all active sessions.</span>
+      </div>
+      <label className="users-field">
         <span>New password</span>
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="At least 6 characters"
+          autoComplete="new-password"
           minLength={6}
           required
           autoFocus
         />
       </label>
-      <button
-        type="submit"
-        className="btn btn-primary btn-sm"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Saving..." : "Set password"}
-      </button>
-      {success && <span className="form-success">Password updated.</span>}
-      {error && <span className="form-error">{error}</span>}
+      <div className="users-inline-actions">
+        <button
+          type="button"
+          className="users-secondary-button"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="users-primary-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Updating…" : "Update password"}
+        </button>
+      </div>
+      {error && <p className="users-form-error">{error}</p>}
     </form>
   );
+}
+
+function formatRole(role: UserRole) {
+  return role === "ADMIN" ? "Administrator" : "User";
+}
+
+function formatStatus(status: UserStatus) {
+  return status === "ACTIVE" ? "Active" : "Disabled";
 }
