@@ -20,8 +20,6 @@ export async function POST(request: NextRequest) {
     password?: unknown;
   };
 
-  console.log("Login attempt:", { username, password });
-
   if (
     typeof username !== "string" ||
     typeof password !== "string" ||
@@ -36,8 +34,6 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const user = await db.user.findUnique({ where: { username } });
-
-  console.log("User found:", user);
 
   // Keep authentication errors generic so usernames cannot be enumerated.
   if (!user || user.status !== "ACTIVE") {
