@@ -18,6 +18,26 @@ export async function requireAdminPage(): Promise<User> {
 }
 
 /**
+ * For use in Server Components / Pages.
+ * Redirects to /login if there is no session, or if the logged-in
+ * user is not active. Redirects admins to /admin, since /user is
+ * only for the normal-user workspace.
+ */
+export async function requireUserPage(): Promise<User> {
+  const user = await getSessionUser();
+
+  if (!user || user.status !== "ACTIVE") {
+    redirect("/login");
+  }
+
+  if (user.role === "ADMIN") {
+    redirect("/admin");
+  }
+
+  return user;
+}
+
+/**
  * For use in Route Handlers (API routes).
  * Returns the admin user, or null if the caller is not an authenticated,
  * active admin. Callers should return a 401/403 response when null.
